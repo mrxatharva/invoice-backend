@@ -1,7 +1,7 @@
 from fastapi import APIRouter, UploadFile, File, Depends, HTTPException
 from sqlalchemy.orm import Session
 import json
-
+from app.services.validation_service import validate_invoice
 from app.database import SessionLocal
 from app import model
 from app.services.upload_service import save_uploaded_file
@@ -51,7 +51,15 @@ def upload_invoice(
         invoice_json = {}
 
         if raw_text.strip():
-            invoice_json = extract_invoice_data(raw_text)
+            try:
+                invoice_json = extract_invoice_data(raw_text)
+            except Exception as e:
+                invoice_json = {
+                    "error": str(e)
+                }
+
+        # Validate AFTER AI extraction
+        validation = validate_invoice(invoice_json)
 
         # Step 4: Save to Database
         invoice = model.Invoice(
@@ -61,7 +69,10 @@ def upload_invoice(
             file_type=file_info["file_type"],
             raw_text=raw_text,
             extracted_json=json.dumps(invoice_json),
-            status="completed"
+            status="completed",
+
+            validation_status=validation["status"],
+            confidence_score=validation["confidence"]
         )
 
         db.add(invoice)

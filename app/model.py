@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text
+from sqlalchemy import Column, Integer, String, Text, Float
 from app.database import Base
 
 
@@ -17,3 +17,5 @@ class Invoice(Base):
     extracted_json = Column(Text, nullable=True)
 
     status = Column(String, default="uploaded")
+    validation_status = Column(String, default="pending")
+    confidence_score = Column(Float, default=0)

@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-
+from fastapi import Query
+import json
 from app.database import SessionLocal
 from app import model
 
@@ -38,6 +39,43 @@ def search_status(status: str, db: Session = Depends(get_db)):
         model.Invoice.status == status
     ).all()
 
+@router.get("/search/")
+def search_invoice(
+    vendor: str = Query(None),
+    status: str = Query(None),
+    db: Session = Depends(get_db)
+):
+
+    invoices = db.query(model.Invoice).all()
+
+    results = []
+
+    for invoice in invoices:
+
+        data = json.loads(invoice.extracted_json)
+
+        if vendor:
+
+            if vendor.lower() not in data.get(
+                "vendor_name", ""
+            ).lower():
+                continue
+
+        if status:
+
+            if invoice.validation_status.lower() != status.lower():
+                continue
+
+        results.append({
+            "id": invoice.id,
+            "vendor": data.get("vendor_name"),
+            "invoice_number": data.get("invoice_number"),
+            "amount": data.get("total_amount"),
+            "validation": invoice.validation_status,
+            "confidence": invoice.confidence_score
+        })
+
+    return results
 
 # Get invoice by ID
 @router.get("/{invoice_id}")

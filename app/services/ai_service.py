@@ -1,34 +1,37 @@
 import json
-from urllib import response
-from google import genai
-from app.config import GEMINI_API_KEY
-
-
-client = genai.Client(api_key=GEMINI_API_KEY)
-
+import ollama
 
 def extract_invoice_data(raw_text: str):
 
     prompt = f"""
 You are an invoice extraction assistant.
 
-Extract the invoice information from the following OCR text.
+Extract only the following fields and return ONLY valid JSON.
 
-Return ONLY valid JSON.
+Fields:
+- vendor_name
+- invoice_number
+- invoice_date
+- gstin
+- total_amount
 
-OCR TEXT:
-
+Invoice Text:
 {raw_text}
 """
 
-    response = client.models.generate_content(
-    model="gemini-flash-latest",
-    contents=prompt,
+    response = ollama.chat(
+        model="gemma3:4b",
+        messages=[
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ]
     )
-    print(response.text)
-    text = response.text.strip()
 
-    if text.startswith("```json"):
-        text = text.replace("```json", "").replace("```", "").strip()
+    result = response["message"]["content"]
 
-    return json.loads(text)
+    # Remove markdown
+    result = result.replace("```json", "").replace("```", "").strip()
+
+    return json.loads(result)
