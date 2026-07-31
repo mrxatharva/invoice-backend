@@ -7,6 +7,7 @@ from app.routers import upload
 from app.routers import dashboard
 from app.routers import invoices
 from app.routers import analytics
+from fastapi.middleware.cors import CORSMiddleware
 
 model.Base.metadata.create_all(bind=engine)
 
@@ -15,6 +16,16 @@ app = FastAPI(
     version="1.0.0"
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://127.0.0.1:5500",
+        "http://localhost:5500"
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.include_router(search.router)
 app.include_router(upload.router)
 app.include_router(dashboard.router)
