@@ -1,40 +1,9 @@
-# Python
-__pycache__/
-*.py[cod]
-*.pyo
-
-# Virtual environments
+.env
 venv/
 venv311/
-.venv/
-env/
-
-# Environment variables / secrets
-.env
-.env.*
-!.env.example
-
-# Databases
-*.db
-*.sqlite
-*.sqlite3
-
-# Uploaded files
+__pycache__/
+*.pyc
 uploads/
-
-# Temporary OCR/PDF files
 temp_pages/
-app/services/temp_pages/
-
-# Generated images
-*.png
-*.jpg
-*.jpeg
-
-# IDE
-.vscode/
-.idea/
-
-# OS
-.DS_Store
-Thumbs.db
+*.db
+invoices.db
