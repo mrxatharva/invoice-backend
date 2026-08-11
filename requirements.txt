@@ -34,9 +34,11 @@ flask-babel==4.0.0
 fonttools==4.63.0
 fsspec==2026.7.0
 future==1.0.0
+google-api-core==2.29.0
 google-api-python-client==2.198.0
 google-auth==2.56.3
 google-auth-httplib2==0.4.1
+googleapis-common-protos==1.73.0
 greenlet==3.5.4
 grpcio==1.83.0
 h11==0.16.0
@@ -65,6 +67,7 @@ numpy==1.26.4
 ollama==0.6.2
 opencv-contrib-python==4.6.0.66
 opencv-python==4.6.0.66
+opencv-python-headless==4.11.0.86
 openpyxl==3.1.5
 opt-einsum==3.3.0
 packaging==26.3
@@ -74,6 +77,7 @@ pandas==3.0.5
 pdf2docx==0.5.13
 pillow==12.3.0
 premailer==3.10.0
+proto-plus==1.27.1
 protobuf==3.20.2
 psutil==7.2.2
 pyasn1==0.6.4
