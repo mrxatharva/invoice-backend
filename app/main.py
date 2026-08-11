@@ -5,11 +5,10 @@ from app import model
 from app.routers import export
 from app.routers import upload
 from app.routers import dashboard
-from app.routers import invoices
 from app.routers import analytics
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import auth
-
+from app.routers import invoice
 
 model.Base.metadata.create_all(bind=engine)
 
@@ -31,10 +30,10 @@ app.add_middleware(
 app.include_router(search.router)
 app.include_router(upload.router)
 app.include_router(dashboard.router)
-app.include_router(invoices.router)
 app.include_router(export.router)
 app.include_router(analytics.router)
 app.include_router(auth.router)
+app.include_router(invoice.router)
 
 @app.get("/")
 def root():

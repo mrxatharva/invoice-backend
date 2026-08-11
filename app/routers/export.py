@@ -34,15 +34,18 @@ def export_excel(db: Session = Depends(get_db)):
         data = {}
 
         if invoice.extracted_json:
-            data = json.loads(invoice.extracted_json)
+            try:
+                data = json.loads(invoice.extracted_json)
+            except (TypeError, json.JSONDecodeError):
+                data = {}
 
         rows.append({
             "Invoice ID": invoice.id,
             "Vendor": data.get("vendor_name"),
             "Invoice Number": data.get("invoice_number"),
             "Invoice Date": data.get("invoice_date"),
-            "GSTIN": data.get("gstin"),
-            "Amount": data.get("total_amount"),
+            "GSTIN": data.get("gst_number", data.get("gstin")),
+            "Amount": data.get("grand_total", data.get("total_amount")),
             "Status": invoice.status
         })
 
@@ -76,14 +79,17 @@ def export_pdf(db: Session = Depends(get_db)):
         data = {}
 
         if invoice.extracted_json:
-            data = json.loads(invoice.extracted_json)
+            try:
+                data = json.loads(invoice.extracted_json)
+            except (TypeError, json.JSONDecodeError):
+                data = {}
 
         rows.append([
             invoice.id,
             data.get("vendor_name"),
             data.get("invoice_number"),
             data.get("invoice_date"),
-            data.get("total_amount")
+            data.get("grand_total", data.get("total_amount"))
         ])
 
     filename = "invoice_report.pdf"

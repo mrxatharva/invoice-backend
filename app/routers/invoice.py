@@ -1,11 +1,8 @@
 import json
-
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-
 from app.database import SessionLocal
 from app import model
-
 
 router = APIRouter(
     prefix="/invoices",
@@ -15,16 +12,11 @@ router = APIRouter(
 
 def get_db():
     db = SessionLocal()
-
     try:
         yield db
     finally:
         db.close()
 
-
-# ============================================================
-# GET ALL INVOICES
-# ============================================================
 
 @router.get("/")
 def get_invoices(
@@ -32,9 +24,14 @@ def get_invoices(
     limit: int = 10,
     db: Session = Depends(get_db)
 ):
+    if page < 1:
+        page = 1
 
-    page = max(page, 1)
-    limit = min(max(limit, 1), 100)
+    if limit < 1:
+        limit = 10
+
+    if limit > 100:
+        limit = 100
 
     total = db.query(model.Invoice).count()
 
@@ -48,18 +45,13 @@ def get_invoices(
         .all()
     )
 
-    result = []
-
-    for invoice in invoices:
-
+    def invoice_summary(invoice):
         try:
-            extracted = json.loads(
-                invoice.extracted_json or "{}"
-            )
-        except Exception:
-            extracted = {}
+            extracted_data = json.loads(invoice.extracted_json or "{}")
+        except (TypeError, json.JSONDecodeError):
+            extracted_data = {}
 
-        result.append({
+        return {
             "id": invoice.id,
             "file_name": invoice.file_name,
             "original_file_name": invoice.original_file_name,
@@ -67,8 +59,8 @@ def get_invoices(
             "status": invoice.status,
             "validation_status": invoice.validation_status,
             "confidence_score": invoice.confidence_score,
-            "invoice_data": extracted
-        })
+            "invoice_data": extracted_data,
+        }
 
     return {
         "success": True,
@@ -76,13 +68,8 @@ def get_invoices(
         "limit": limit,
         "total": total,
         "total_pages": (total + limit - 1) // limit,
-        "invoices": result
+        "invoices": [invoice_summary(invoice) for invoice in invoices]
     }
-
-
-# ============================================================
-# SEARCH INVOICES
-# ============================================================
 
 @router.get("/search")
 def search_invoices(
@@ -90,7 +77,6 @@ def search_invoices(
     status: str | None = None,
     db: Session = Depends(get_db)
 ):
-
     query = db.query(model.Invoice)
 
     if vendor_name:
@@ -111,95 +97,53 @@ def search_invoices(
         .all()
     )
 
-    result = []
-
-    for invoice in invoices:
-
+    def invoice_summary(invoice):
         try:
-            extracted = json.loads(
-                invoice.extracted_json or "{}"
-            )
-        except Exception:
-            extracted = {}
-
-        result.append({
+            extracted_data = json.loads(invoice.extracted_json or "{}")
+        except (TypeError, json.JSONDecodeError):
+            extracted_data = {}
+        return {
             "id": invoice.id,
             "file_name": invoice.file_name,
             "original_file_name": invoice.original_file_name,
-            "file_type": invoice.file_type,
             "status": invoice.status,
             "validation_status": invoice.validation_status,
             "confidence_score": invoice.confidence_score,
-            "invoice_data": extracted
-        })
+            "invoice_data": extracted_data,
+        }
 
     return {
         "success": True,
-        "count": len(result),
-        "invoices": result
+        "count": len(invoices),
+        "invoices": [invoice_summary(invoice) for invoice in invoices]
     }
-
-
-# ============================================================
-# GET SINGLE INVOICE
-# ============================================================
 
 @router.get("/{invoice_id}")
 def get_invoice(
     invoice_id: int,
     db: Session = Depends(get_db)
 ):
-
-    invoice = (
-        db.query(model.Invoice)
-        .filter(model.Invoice.id == invoice_id)
-        .first()
-    )
-
+    invoice = db.query(model.Invoice).filter(model.Invoice.id == invoice_id).first()
     if not invoice:
-
-        raise HTTPException(
-            status_code=404,
-            detail="Invoice not found"
-        )
+        raise HTTPException(status_code=404, detail="Invoice not found")
 
     try:
-        extracted_data = json.loads(
-            invoice.extracted_json or "{}"
-        )
-    except Exception:
+        extracted_data = json.loads(invoice.extracted_json or "{}")
+    except (TypeError, json.JSONDecodeError):
         extracted_data = {}
 
     return {
         "success": True,
-
         "invoice": {
             "id": invoice.id,
-
             "file_name": invoice.file_name,
-
-            "original_file_name":
-                invoice.original_file_name,
-
-            "file_path":
-                invoice.file_path,
-
-            "file_type":
-                invoice.file_type,
-
-            "raw_text":
-                invoice.raw_text,
-
-            "status":
-                invoice.status,
-
-            "validation_status":
-                invoice.validation_status,
-
-            "confidence_score":
-                invoice.confidence_score,
-
-            "extracted_data":
-                extracted_data
+            "original_file_name": invoice.original_file_name,
+            "file_path": invoice.file_path,
+            "file_type": invoice.file_type,
+            "raw_text": invoice.raw_text,
+            "status": invoice.status,
+            "validation_status": invoice.validation_status,
+            "confidence_score": invoice.confidence_score,
+            "extracted_data": extracted_data,
         }
     }

@@ -38,14 +38,17 @@ def dashboard(db: Session = Depends(get_db)):
 
         if invoice.extracted_json:
 
-            data = json.loads(invoice.extracted_json)
+            try:
+                data = json.loads(invoice.extracted_json)
+            except (TypeError, json.JSONDecodeError):
+                data = {}
 
             vendor = data.get("vendor_name")
 
             if vendor:
                 vendors.add(vendor)
 
-            amount = data.get("total_amount", 0)
+            amount = data.get("grand_total", data.get("total_amount", 0))
 
             try:
                 total_amount += float(amount)

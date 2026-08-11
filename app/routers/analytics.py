@@ -35,15 +35,18 @@ def analytics(db: Session = Depends(get_db)):
 
         if invoice.extracted_json:
 
-            data = json.loads(invoice.extracted_json)
+            try:
+                data = json.loads(invoice.extracted_json)
+            except (TypeError, json.JSONDecodeError):
+                data = {}
 
             vendor = data.get("vendor_name")
             if vendor:
                 vendors.add(vendor)
 
             try:
-                amounts.append(float(data.get("total_amount", 0)))
-            except:
+                amounts.append(float(data.get("grand_total", data.get("total_amount", 0)) or 0))
+            except (TypeError, ValueError):
                 pass
 
     return {
