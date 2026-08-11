@@ -8,6 +8,8 @@ from app.routers import dashboard
 from app.routers import invoices
 from app.routers import analytics
 from fastapi.middleware.cors import CORSMiddleware
+from app.routers import auth
+
 
 model.Base.metadata.create_all(bind=engine)
 
@@ -32,6 +34,7 @@ app.include_router(dashboard.router)
 app.include_router(invoices.router)
 app.include_router(export.router)
 app.include_router(analytics.router)
+app.include_router(auth.router)
 
 @app.get("/")
 def root():
